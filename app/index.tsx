@@ -1,19 +1,214 @@
-import { Stack, Link } from 'expo-router';
+import { router } from 'expo-router';
+import React, { useState, useRef, useEffect } from 'react';
+import {
+  View,
+  Text,
+  FlatList,
+  Dimensions,
+  Image,
+  TouchableOpacity,
+  StatusBar,
+  ViewStyle,
+} from 'react-native';
+import { cards, onBoard1, onBoard2, onBoard3 } from '../assets/images';
 
-import { Button } from '@/components/Button';
-import { Container } from '@/components/Container';
-import { ScreenContent } from '@/components/ScreenContent';
+const { width, height } = Dimensions.get('window');
 
-export default function Home() {
+// Define TypeScript interfaces
+interface OnboardingSlide {
+  key: string;
+  title: string;
+  description: string;
+  image: any;
+  backgroundColor: string;
+  textColor: string;
+  indicatorBg: string;
+  indicatorActiveBg: string;
+  textSmall?: string;
+  imageStyle?: {
+    width: number;
+    height: number;
+  };
+}
+
+interface ViewableItemsChanged {
+  viewableItems: Array<{
+    index: number;
+    item: OnboardingSlide;
+    key: string;
+    isViewable: boolean;
+  }>;
+}
+
+// --- Onboarding Data ---
+// This array holds the content for each slide.
+const onboardingSlides: OnboardingSlide[] = [
+  {
+    key: '1',
+    title: 'Web3 + TradFi\nHybrid Investing',
+    description:
+      'Experience the best of both worlds with our hybrid platform that combines traditional finance with Web3 technology for faster, fairer investing.',
+    image: onBoard1,
+    backgroundColor: '#1E1A3E',
+    textColor: 'text-[#949FFF]',
+    indicatorBg: 'bg-white/30',
+    indicatorActiveBg: 'bg-white',
+    textSmall: 'text-[#D7D6FF]',
+    imageStyle: { width: width, height: height * 0.7 },
+  },
+  {
+    key: '2',
+    title: 'Instant Deposits\nWith Stablecoins',
+    description:
+      'Fund your account instantly with stablecoins from EVM and Solana chains. No more waiting for bank transfers to start investing!',
+    image: onBoard2,
+    backgroundColor: '#D4FF00',
+    textColor: 'text-black',
+    indicatorBg: 'bg-black/30',
+    indicatorActiveBg: 'bg-black',
+    imageStyle: { width: width, height: height * 0.7 },
+  },
+  {
+    key: '3',
+    title: 'Expert-Curated\nInvestment Baskets',
+    description:
+      'Choose from expertly designed investment baskets like Tech Growth and Sustainability. Simplified investing for maximum impact.',
+    image: onBoard3,
+    backgroundColor: '#EAE8FF',
+    textColor: 'text-[#1E1F4B]',
+    indicatorBg: 'bg-slate-400/50',
+    indicatorActiveBg: 'bg-slate-800',
+    imageStyle: { width: width, height: height * 0.7 },
+  },
+  {
+    key: '4',
+    title: 'Smart Cards\nSmarter Wealth',
+    description:
+      'Get physical and virtual debit cards that automatically round up purchases and invest the difference. Earn cashback directly into your investment portfolio!',
+    image: cards,
+    backgroundColor: '#EAE8FF',
+    textColor: 'text-[#1E1F4B]',
+    indicatorBg: 'bg-slate-400/50',
+    indicatorActiveBg: 'bg-slate-800',
+    imageStyle: { width: width, height: height * 0.6 }, // Different size for cards image
+  },
+];
+
+const SLIDE_INTERVAL = 6000; // 4 seconds
+
+// --- Main App Component ---
+export default function App() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const flatListRef = useRef<FlatList<OnboardingSlide>>(null);
+
+  // --- Auto-scroll Logic ---
+  useEffect(() => {
+    const timer = setInterval(() => {
+      // Move to the next slide, or loop back to the first
+      const nextIndex = (currentIndex + 1) % onboardingSlides.length;
+      flatListRef.current?.scrollToIndex({ animated: true, index: nextIndex });
+      setCurrentIndex(nextIndex);
+    }, SLIDE_INTERVAL);
+
+    // Clear the interval when the component is unmounted or index changes
+    return () => clearInterval(timer);
+  }, [currentIndex]);
+
+  // --- Handle scroll to update the current index ---
+  const onViewableItemsChanged = useRef((info: ViewableItemsChanged) => {
+    if (info.viewableItems.length > 0) {
+      setCurrentIndex(info.viewableItems[0].index);
+    }
+  }).current;
+
+  const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 50 }).current;
+
+  // --- Renders each slide item ---
+  const renderItem = ({ item }: { item: OnboardingSlide }) => (
+    <View
+      className="flex-1 items-center"
+      style={{ width: width, backgroundColor: item.backgroundColor }}>
+      <View className="w-full flex-1 items-start px-4 pt-32 ">
+        <Text className={`font-mdnichrome-bold text-[50px] tracking-wides w-full uppercase ${item.textColor}`}>
+          {item.title}
+        </Text>
+        <Text
+          className={`mt-4 max-w-xs font-body-light text-base font-bold ${item.textSmall ?? ''} opacity-80`}>
+          {item.description}
+        </Text>
+      </View>
+
+      <Image
+        source={item.image}
+        style={item.imageStyle}
+        className="absolute bottom-0"
+        resizeMode="cover"
+        onError={(e) => console.log('Image failed to load', e.nativeEvent.error)}
+      />
+    </View>
+  );
+
+  // --- Renders the top progress indicators ---
+  const renderIndicators = () => {
+    const currentSlide = onboardingSlides[currentIndex];
+    return (
+      <View className="absolute left-6 right-6 top-16 flex-row space-x-2">
+        {onboardingSlides.map((_, index) => (
+          <View
+            key={index}
+            className={`h-1 flex-1 rounded-full ${index === currentIndex ? currentSlide.indicatorActiveBg : currentSlide.indicatorBg}`}>
+            {index === currentIndex && (
+              <View
+                className={`h-1 rounded-full ${currentSlide.indicatorActiveBg}`}
+                style={{ width: '100%' } as ViewStyle}
+              />
+            )}
+          </View>
+        ))}
+      </View>
+    );
+  };
+
   return (
-    <>
-      <Stack.Screen options={{ title: 'Home' }} />
-      <Container>
-        <ScreenContent path="app/index.tsx" title="Home"></ScreenContent>
-        <Link href={{ pathname: '/details', params: { name: 'Dan' } }} asChild>
-          <Button title="Show Details" />
-        </Link>
-      </Container>
-    </>
+    <View className="flex-1 bg-white">
+      <StatusBar
+        barStyle={
+          onboardingSlides[currentIndex].backgroundColor === '#D4FF00'
+            ? 'dark-content'
+            : 'light-content'
+        }
+      />
+      <FlatList
+        ref={flatListRef}
+        data={onboardingSlides}
+        renderItem={renderItem}
+        horizontal
+        pagingEnabled
+        bounces={false}
+        scrollEventThrottle={16}
+        decelerationRate={0.85}
+        showsHorizontalScrollIndicator={false}
+        keyExtractor={(item) => item.key}
+        onViewableItemsChanged={({ viewableItems }) => {
+          if (viewableItems.length > 0 && viewableItems[0].index !== null) {
+            setCurrentIndex(viewableItems[0].index);
+          }
+        }}
+        viewabilityConfig={viewabilityConfig}
+        getItemLayout={(_, index) => ({ length: width, offset: width * index, index })}
+      />
+      {renderIndicators()}
+
+      {/* --- "Get Started" Button --- */}
+      <View className="absolute bottom-10 w-full items-center px-6">
+        <TouchableOpacity
+          className="w-full rounded-full bg-slate-900 p-4"
+          onPress={() => router.push('/(tabs)')}
+        >
+          <Text className="text-center text-lg font-bold text-white">Sign up with Apple</Text>
+        </TouchableOpacity>
+        <Text className='mt-4 text-center text-[14px] font-body text-white'>Continue with email</Text>
+      </View>
+    </View>
   );
 }
