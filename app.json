@@ -16,7 +16,7 @@
       "tsconfigPaths": true
     },
     "orientation": "portrait",
-    "icon": "./assets/icon/ios-light.png",
+    "icon": "./assets/app-icon/ios-light.png",
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash.png",
@@ -32,9 +32,9 @@
         "ITSAppUsesNonExemptEncryption": false
       },
         "icon": {
-                "dark": "./assets/icon/ios-dark.png",
-                "light": "./assets/icon/ios-light.png",
-                "tinted": "./assets/icon/ios-tinted.png"
+                "dark": "./assets/app-icon/ios-dark.png",
+                "light": "./assets/app-icon/ios-light.png",
+                "tinted": "./assets/app-icon/ios-tinted.png"
        }
     },
     "android": {
