@@ -58,20 +58,8 @@ export default function SignIn() {
       },
       {
         onSuccess: (response) => {
-          // Check if user already has a passcode or needs to create one
-          const hasPasscode = response.user?.hasPasscode;
-          const onboardingStatus = response.user?.onboardingStatus;
-          
-          if (hasPasscode) {
-            // Returning user with passcode - go to login-passcode screen
-            router.replace('/(auth)/login-passcode');
-          } else if (onboardingStatus === 'completed') {
-            // User completed onboarding but no passcode - direct to home
-            router.replace('/(tabs)');
-          } else {
-            // New user or incomplete onboarding - navigate to create passcode
-            router.replace('/(auth)/create-passcode');
-          }
+          // Route directly to home screen after successful sign-in
+          router.replace('/(tabs)');
         },
         onError: (error: any) => {
           console.error('Login error:', error);

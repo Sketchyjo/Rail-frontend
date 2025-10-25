@@ -126,6 +126,11 @@ export interface ChangePasswordRequest {
   newPassword: string;
 }
 
+export interface DeleteAccountRequest {
+  password?: string;
+  reason?: string;
+}
+
 // ============= Passcode Types =============
 
 export interface PasscodeStatus {
@@ -209,7 +214,57 @@ export interface OnboardingStatusResponse {
   requiredActions: string[];
 }
 
+// ============= Portfolio Types =============
+
+export interface PortfolioOverview {
+  totalPortfolio: string;
+  buyingPower: string;
+  positionsValue: string;
+  performanceLast30d: number;
+  currency: string;
+  lastUpdated: string;
+}
+
 // ============= Wallet Types =============
+
+// Testnet chains (primary focus for development)
+export type TestnetChain = 
+  | 'ETH-SEPOLIA' 
+  | 'MATIC-AMOY' 
+  | 'SOL-DEVNET' 
+  | 'APTOS-TESTNET' 
+  | 'BASE-SEPOLIA';
+
+// Mainnet chains (for production)
+export type MainnetChain = 
+  | 'ETH' 
+  | 'MATIC' 
+  | 'AVAX' 
+  | 'SOL' 
+  | 'APTOS' 
+  | 'BASE';
+
+// All supported wallet chains
+export type WalletChain = TestnetChain | MainnetChain;
+
+export type WalletStatus = 'creating' | 'live' | 'failed';
+
+export interface WalletAddressResponse {
+  chain: WalletChain;
+  address: string;
+  status: WalletStatus;
+}
+
+// Note: API returns a single wallet object for a specific chain, not an array
+export interface WalletAddressesResponse {
+  chain: WalletChain;
+  address: string;
+  status: WalletStatus;
+}
+
+export interface GetWalletAddressesRequest {
+  chain?: WalletChain;
+}
 
 export interface Token {
   id: string;

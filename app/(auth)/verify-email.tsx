@@ -42,8 +42,8 @@ export default function VerifyEmail() {
           onSuccess: (response) => {
             // Store user info and tokens from verification
             // Note: The hook already updates the auth store
-            // Navigate to passcode setup
-            router.replace('/(auth)/create-passcode');
+            // Route directly to home screen after email verification
+            router.replace('/(tabs)');
           },
           onError: (err: any) => {
             const errorCode = err?.error?.code;

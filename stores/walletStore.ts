@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { walletService } from '../api/services';
 
 export interface Token {
   id: string;
@@ -133,20 +134,35 @@ export const useWalletStore = create<WalletState & WalletActions>()(
       fetchTokens: async () => {
         set({ isLoading: true, error: null });
         try {
-          // TODO: Replace with actual API call
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          const balance = await walletService.getBalance();
+          
+          // Transform API response to match store structure
+          const tokens: Token[] = balance.tokens.map(token => ({
+            id: token.symbol.toLowerCase(),
+            symbol: token.symbol,
+            name: token.name,
+            balance: parseFloat(token.balance),
+            usdValue: parseFloat(token.balanceUSD),
+            priceChange: 0, // Price change not in balance response
+            network: token.chain,
+            icon: token.symbol.toLowerCase(),
+          }));
           
           set({
-            tokens: MOCK_TOKENS,
+            tokens,
             isLoading: false,
           });
           
           get().calculateTotalBalance();
         } catch (error) {
+          console.error('[WalletStore] Failed to fetch tokens:', error);
+          // Fallback to mock data if API fails
           set({
+            tokens: MOCK_TOKENS,
             error: error instanceof Error ? error.message : 'Failed to fetch tokens',
             isLoading: false,
           });
+          get().calculateTotalBalance();
         }
       },
 
@@ -165,14 +181,20 @@ export const useWalletStore = create<WalletState & WalletActions>()(
       refreshPrices: async () => {
         set({ isLoading: true });
         try {
-          // TODO: Replace with actual API call to get latest prices
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
           const { tokens } = get();
-          const updatedTokens = tokens.map(token => ({
-            ...token,
-            priceChange: (Math.random() - 0.5) * 10, // Mock price change
-          }));
+          const tokenIds = tokens.map(t => t.symbol);
+          
+          // Fetch latest prices from API
+          const pricesResponse = await walletService.getPrices({ tokenIds });
+          
+          const updatedTokens = tokens.map(token => {
+            const priceData = pricesResponse.prices[token.symbol];
+            return {
+              ...token,
+              priceChange: priceData?.priceChange24h || 0,
+              usdValue: token.balance * (priceData?.price || 1),
+            };
+          });
           
           set({
             tokens: updatedTokens,
@@ -181,6 +203,7 @@ export const useWalletStore = create<WalletState & WalletActions>()(
           
           get().calculateTotalBalance();
         } catch (error) {
+          console.error('[WalletStore] Failed to refresh prices:', error);
           set({
             error: error instanceof Error ? error.message : 'Failed to refresh prices',
             isLoading: false,
@@ -192,15 +215,41 @@ export const useWalletStore = create<WalletState & WalletActions>()(
       fetchTransactions: async () => {
         set({ isLoading: true, error: null });
         try {
-          // TODO: Replace with actual API call
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          const txResponse = await walletService.getTransactions({ limit: 50 });
+          
+          // Transform API transactions to store format
+          const transactions: Transaction[] = txResponse.items.map(tx => ({
+            id: tx.id,
+            type: tx.type as Transaction['type'],
+            token: {
+              id: tx.token.symbol.toLowerCase(),
+              symbol: tx.token.symbol,
+              name: tx.token.name,
+              balance: 0,
+              usdValue: parseFloat(tx.amountUSD),
+              priceChange: 0,
+              network: tx.token.chain,
+              icon: tx.token.symbol.toLowerCase(),
+            },
+            amount: tx.amount,
+            usdAmount: tx.amountUSD,
+            from: tx.fromAddress,
+            to: tx.toAddress,
+            timestamp: tx.createdAt,
+            status: tx.status as Transaction['status'],
+            txHash: tx.txHash,
+            fee: tx.fee,
+          }));
           
           set({
-            transactions: MOCK_TRANSACTIONS,
+            transactions,
             isLoading: false,
           });
         } catch (error) {
+          console.error('[WalletStore] Failed to fetch transactions:', error);
+          // Fallback to mock data if API fails
           set({
+            transactions: MOCK_TRANSACTIONS,
             error: error instanceof Error ? error.message : 'Failed to fetch transactions',
             isLoading: false,
           });

@@ -18,7 +18,6 @@ import type {
   VerifyEmailRequest,
   ForgotPasswordRequest,
   ResetPasswordRequest,
-  ChangePasswordRequest,
 } from '../types';
 
 const AUTH_ENDPOINTS = {
@@ -31,8 +30,6 @@ const AUTH_ENDPOINTS = {
   VERIFY_EMAIL: '/v1/auth/verify-email',
   FORGOT_PASSWORD: '/v1/auth/forgot-password',
   RESET_PASSWORD: '/v1/auth/reset-password',
-  CHANGE_PASSWORD: '/v1/auth/change-password',
-  ME: '/v1/auth/me',
 };
 
 export const authService = {
@@ -106,20 +103,6 @@ export const authService = {
    */
   async resetPassword(data: ResetPasswordRequest): Promise<void> {
     return apiClient.post(AUTH_ENDPOINTS.RESET_PASSWORD, data);
-  },
-
-  /**
-   * Change password (requires authentication)
-   */
-  async changePassword(data: ChangePasswordRequest): Promise<void> {
-    return apiClient.post(AUTH_ENDPOINTS.CHANGE_PASSWORD, data);
-  },
-
-  /**
-   * Get current user info
-   */
-  async getCurrentUser(): Promise<any> {
-    return apiClient.get(AUTH_ENDPOINTS.ME);
   },
 };
 

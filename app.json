@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Stacks",
-    "slug": "Stacks",
+    "slug": "Testrun",
     "version": "1.0.0",
     "scheme": "stacks",
     "platforms": ["ios", "android"],

@@ -3,9 +3,21 @@
  * Base Axios instance with interceptors, authentication, and error handling
  */
 
-import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
+import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig, AxiosRequestConfig } from 'axios';
 import { useAuthStore } from '../stores/authStore';
 import type { ApiError, ApiResponse } from './types';
+
+/**
+ * Custom Axios instance type that returns unwrapped data
+ * Our response interceptor returns response.data directly
+ */
+interface ApiClient extends Omit<AxiosInstance, 'get' | 'post' | 'put' | 'patch' | 'delete'> {
+  get<T = any>(url: string, config?: AxiosRequestConfig): Promise<T>;
+  post<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T>;
+  put<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T>;
+  patch<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T>;
+  delete<T = any>(url: string, config?: AxiosRequestConfig): Promise<T>;
+}
 
 // Environment-based configuration
 const API_CONFIG = {
@@ -19,8 +31,9 @@ const API_CONFIG = {
 
 /**
  * Create base axios instance
+ * Cast to ApiClient type since our interceptor unwraps responses
  */
-const apiClient: AxiosInstance = axios.create(API_CONFIG);
+const apiClient = axios.create(API_CONFIG) as ApiClient;
 
 /**
  * Request interceptor
@@ -75,30 +88,35 @@ apiClient.interceptors.response.use(
 
     // Handle 401 Unauthorized - Token expired or invalid
     if (error.response?.status === 401 && !originalRequest._retry) {
-      // Don't retry for login/register/verify endpoints
+      // Don't retry for auth endpoints or refresh endpoint itself
       const isAuthEndpoint = originalRequest.url?.includes('/auth/login') ||
                              originalRequest.url?.includes('/auth/register') ||
-                             originalRequest.url?.includes('/auth/verify-code');
+                             originalRequest.url?.includes('/auth/verify-code') ||
+                             originalRequest.url?.includes('/auth/refresh');
       
       if (!isAuthEndpoint) {
         originalRequest._retry = true;
 
         try {
           // Attempt to refresh token
-          const { refreshSession } = useAuthStore.getState();
-          await refreshSession();
+          const { refreshSession, isAuthenticated } = useAuthStore.getState();
+          
+          // Only try refresh if we're still authenticated
+          if (isAuthenticated) {
+            await refreshSession();
 
-          // Retry original request with new token
-          const newAccessToken = useAuthStore.getState().accessToken;
-          if (originalRequest.headers && newAccessToken) {
-            originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+            // Retry original request with new token
+            const newAccessToken = useAuthStore.getState().accessToken;
+            if (originalRequest.headers && newAccessToken) {
+              originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+              return apiClient(originalRequest);
+            }
           }
-
-          return apiClient(originalRequest);
         } catch (refreshError) {
-          // Refresh failed, logout user
-          const { logout } = useAuthStore.getState();
-          await logout();
+          // Refresh failed, clear auth state
+          console.warn('[API Client] Token refresh failed, clearing session');
+          const { reset } = useAuthStore.getState();
+          reset();
           return Promise.reject(refreshError);
         }
       }

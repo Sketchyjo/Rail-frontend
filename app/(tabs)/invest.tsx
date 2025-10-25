@@ -1,4 +1,4 @@
-import { View, Text, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import React, { useLayoutEffect, useState } from 'react';
 import { useNavigation } from 'expo-router';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';

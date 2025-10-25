@@ -13,6 +13,8 @@ import type {
   EstimateFeeRequest,
   GetDepositAddressRequest,
   GetPricesRequest,
+  GetWalletAddressesRequest,
+  WalletChain,
 } from '../types';
 
 /**
@@ -112,5 +114,36 @@ export function useNetworks() {
     queryKey: queryKeys.wallet.networks(),
     queryFn: () => walletService.getNetworks(),
     staleTime: 60 * 60 * 1000, // 1 hour (networks rarely change)
+  });
+}
+
+/**
+ * Get wallet addresses, optionally filtered by chain
+ * 
+ * Optimizations:
+ * - 5min stale time (addresses rarely change)
+ * - Cached per chain filter for efficient lookups
+ * - Prevents refetch on window focus
+ * 
+ * Note: Returns error if:
+ * - 401: User not authenticated or token expired
+ * - 404: Endpoint not implemented
+ */
+export function useWalletAddresses(chain?: WalletChain) {
+  return useQuery({
+    queryKey: queryKeys.wallet.addresses(chain),
+    queryFn: () => walletService.getWalletAddresses(chain ? { chain } : undefined),
+    staleTime: 5 * 60 * 1000, // 5 minutes (addresses rarely change)
+    refetchOnWindowFocus: false,
+    refetchInterval: false, // Disable automatic refetch to prevent auth error spam
+    retry: (failureCount, error: any) => {
+      // Don't retry on 401 (auth error) or 404 (not found)
+      const errorCode = error?.error?.code;
+      if (errorCode === 'HTTP_401' || errorCode === 'HTTP_404') {
+        return false;
+      }
+      // Retry once for other errors
+      return failureCount < 1;
+    },
   });
 }

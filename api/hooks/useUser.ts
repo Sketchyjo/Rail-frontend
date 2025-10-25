@@ -13,6 +13,8 @@ import type {
   MarkNotificationReadRequest,
   Verify2FARequest,
   RemoveDeviceRequest,
+  ChangePasswordRequest,
+  DeleteAccountRequest,
   User,
 } from '../types';
 
@@ -38,6 +40,30 @@ export function useUpdateProfile() {
     onSuccess: (updatedProfile) => {
       // Update cached profile
       queryClient.setQueryData(queryKeys.user.profile(), updatedProfile);
+    },
+  });
+}
+
+/**
+ * Change password mutation
+ */
+export function useChangePassword() {
+  return useMutation({
+    mutationFn: (data: ChangePasswordRequest) => userService.changePassword(data),
+  });
+}
+
+/**
+ * Delete account mutation
+ */
+export function useDeleteAccount() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data?: DeleteAccountRequest) => userService.deleteAccount(data),
+    onSuccess: () => {
+      // Clear all cached data
+      queryClient.clear();
     },
   });
 }
@@ -132,31 +158,17 @@ export function useEnable2FA() {
 }
 
 /**
- * Verify 2FA mutation
- */
-export function useVerify2FA() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (data: Verify2FARequest) => userService.verify2FA(data),
-    onSuccess: () => {
-      // Invalidate settings to refresh 2FA status
-      queryClient.invalidateQueries({ queryKey: queryKeys.user.settings() });
-    },
-  });
-}
-
-/**
  * Disable 2FA mutation
  */
 export function useDisable2FA() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (code: string) => userService.disable2FA(code),
+    mutationFn: (data: Verify2FARequest) => userService.disable2FA(data),
     onSuccess: () => {
       // Invalidate settings to refresh 2FA status
       queryClient.invalidateQueries({ queryKey: queryKeys.user.settings() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user.profile() });
     },
   });
 }

@@ -18,3 +18,6 @@ export type {
   Recipient,
   TransactionDetails,
 } from './withdrawalStore';
+
+// UI store
+export { useUIStore } from './uiStore';

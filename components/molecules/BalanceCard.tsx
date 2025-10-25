@@ -7,16 +7,18 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { Icon } from '../atoms/Icon';
-import { ArrowDown, ArrowDown01, ChevronDown, Eye } from 'lucide-react-native';
+import { ArrowDown, ArrowDown01, ChevronDown, Eye, EyeOff } from 'lucide-react-native';
+import { useUIStore } from '@/stores';
 
 export interface BalanceCardProps extends ViewProps {
   balance?: string;
   percentChange?: string;
   timeframe?: string;
   currency?: string;
+  buyingPower?: string;
   onWithdrawPress?: () => void;
   onReceivePress?: () => void;
-  onHistoryPress?: () => void;
+  onCreateBasketPress?: () => void;
   onMorePress?: () => void;
   className?: string;
 }
@@ -56,14 +58,23 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({
   percentChange = '0.00%',
   timeframe = '1D',
   currency = 'USD',
+  buyingPower = '$0.00',
   onWithdrawPress,
   onReceivePress,
-  onHistoryPress,
+  onCreateBasketPress,
   onMorePress,
   className,
   ...props
 }) => {
   const { width: screenWidth } = useWindowDimensions();
+  const { isBalanceVisible, toggleBalanceVisibility } = useUIStore();
+
+  // Helper function to mask balance values
+  const maskValue = (value: string) => {
+    if (isBalanceVisible) return value;
+    // Replace numbers with dashes, keep currency symbol
+    return value.replace(/[\d,\.]+/g, (match) => '−'.repeat(Math.min(match.length, 6)));
+  };
 
   return (
     <View
@@ -82,9 +93,19 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({
              <Text className='text-[17px] font-body-medium text-gray-400'>Total Portfolio</Text>
           <View className='flex-row items-center gap-x-2'>
           <Text className="text-[40px] font-bold font-body-bold mb-1">
-              {balance}
+              {maskValue(balance)}
             </Text>
-            <Eye size={24} color="#545454" strokeWidth={0.9} />
+            <TouchableOpacity 
+              onPress={toggleBalanceVisibility}
+              accessibilityLabel={isBalanceVisible ? "Hide balance" : "Show balance"}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              {isBalanceVisible ? (
+                <Eye size={24} color="#545454" strokeWidth={0.9} />
+              ) : (
+                <EyeOff size={24} color="#545454" strokeWidth={0.9} />
+              )}
+            </TouchableOpacity>
           </View>
             </View>
            
@@ -92,13 +113,13 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({
            <View className='flex-row items-center justify-between gap-x-4'>
            <View className="flex-row items-center">
               <Text className="text-base font-body-light text-red-600">
-                {percentChange} <Text className='text-[#000] font-body-bold'>{timeframe}</Text>
+                {maskValue(percentChange)} <Text className='text-[#000] font-body-bold'>{timeframe}</Text>
               </Text>
             </View>
              
              <View className='flex-row items-center gap-x-1'>
              <Text className='text-base text-gray-400 font-body-light'>Buying Power:</Text>
-             <Text className='text-[#000] text-base font-body-bold'>$00:00</Text>
+             <Text className='text-[#000] text-base font-body-bold'>{maskValue(buyingPower)}</Text>
              </View>
           
            </View>
@@ -113,7 +134,7 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({
           icon="shopping-basket"
           label="Create"
           bgColor="bg-[#F7F7F7]"
-          onPress={onWithdrawPress}
+          onPress={onCreateBasketPress}
         />
 
         <ActionButton
@@ -127,7 +148,7 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({
           icon="arrow-up"
           label="Withdraw"
           bgColor="bg-[#F7F7F7]"
-          onPress={onHistoryPress}
+          onPress={onWithdrawPress}
         />
 
         <ActionButton

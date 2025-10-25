@@ -1,13 +1,7 @@
-import React, { useCallback, useMemo, useState } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ViewProps,
-  GestureResponderEvent,
-} from 'react-native';
+import React, { useCallback, useMemo, useState, useEffect, useRef } from 'react';
+import { View, Text, TouchableOpacity, ViewProps, Animated } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { Icon } from '../atoms/Icon';
-import { Button } from '../ui/Button';
 
 const BACKSPACE_KEY = 'backspace';
 
@@ -20,33 +14,21 @@ const DEFAULT_KEYPAD_LAYOUT = [
 
 type KeypadKey = (typeof DEFAULT_KEYPAD_LAYOUT)[number][number] | string;
 
-export type AmountInputStatus = 'empty' | 'default' | 'error';
+export type AmountInputStatus = 'empty' | 'default' | 'error' | 'success';
 
 export interface AmountInputProps extends ViewProps {
   /**
-   * Heading rendered at the top of the component (e.g "Invest in basket")
+   * Heading rendered at the top of the component (e.g "Order type: Market")
    */
   title?: string;
   /**
-   * Label displayed above the primary account selector block
+   * Callback for back button press
    */
-  sourceLabel?: string;
+  onBack?: () => void;
   /**
-   * Value displayed inside the account selector block
+   * Callback for close button press
    */
-  sourceValue?: string;
-  /**
-   * Optional trailing label shown on the right side of the header (e.g "Min investment")
-   */
-  minLabel?: string;
-  /**
-   * Value displayed below the trailing label (e.g "$15.25")
-   */
-  minValue?: string;
-  /**
-   * Callback triggered when the header/source section is pressed
-   */
-  onSourcePress?: (event: GestureResponderEvent) => void;
+  onClose?: () => void;
   /**
    * Numeric value of the input. When provided the component acts as a controlled input.
    */
@@ -60,41 +42,29 @@ export interface AmountInputProps extends ViewProps {
    */
   onValueChange?: (nextValue: string) => void;
   /**
-   * Optional helper text rendered below the amount (e.g. "= 2.0383 SGT-3402")
+   * Token/stock information displayed below the amount (e.g. "1.851851 AMC")
    */
-  helperText?: string;
+  tokenInfo?: string;
   /**
-   * Secondary text rendered below the helper (commonly used for error messaging)
+   * Icon component or element for the token/stock
+   */
+  tokenIcon?: React.ReactNode;
+  /**
+   * Error message displayed below the token info
    */
   errorText?: string;
   /**
-   * Label displayed above the available balance information
+   * Success message displayed below the token info
    */
-  availableBalanceLabel?: string;
+  successText?: string;
   /**
-   * Value displayed next to the available balance label
+   * Quick amount selection buttons (e.g. [5, 10, 25, 50])
    */
-  availableBalanceValue?: string;
+  quickAmounts?: number[];
   /**
-   * Callback fired when the Max button is tapped
+   * Callback fired when a quick amount is selected
    */
-  onMaxPress?: () => void;
-  /**
-   * Controls whether the Max button should be rendered
-   */
-  showMaxButton?: boolean;
-  /**
-   * Label used for the action button
-   */
-  continueLabel?: string;
-  /**
-   * Callback fired when the action button is pressed
-   */
-  onContinue?: (amount: string) => void;
-  /**
-   * Explicitly disable the action button
-   */
-  continueDisabled?: boolean;
+  onQuickAmountSelect?: (amount: number) => void;
   /**
    * Externally control the visual state of the amount text
    */
@@ -120,10 +90,6 @@ export interface AmountInputProps extends ViewProps {
    */
   supportsDecimal?: boolean;
   /**
-   * Optional note rendered below the primary action button
-   */
-  footerNote?: string;
-  /**
    * Additional container className (nativewind)
    */
   className?: string;
@@ -141,35 +107,32 @@ const ensureDisplayValue = (value: string) => {
 
 export const AmountInput: React.FC<AmountInputProps> = ({
   title,
-  sourceLabel,
-  sourceValue,
-  minLabel,
-  minValue,
-  onSourcePress,
+  onBack,
+  onClose,
   value,
   defaultValue = '0',
   onValueChange,
-  helperText,
+  tokenInfo,
+  tokenIcon,
   errorText,
-  availableBalanceLabel,
-  availableBalanceValue,
-  onMaxPress,
-  showMaxButton,
-  continueLabel = 'Continue',
-  onContinue,
-  continueDisabled,
+  successText,
+  quickAmounts,
+  onQuickAmountSelect,
   status,
   currencySymbol = '$',
   maxDecimals = 2,
   maxDigits,
   keypadLayout,
   supportsDecimal = true,
-  footerNote,
   className = '',
   ...rest
 }) => {
   const isControlled = value !== undefined;
   const [internalValue, setInternalValue] = useState(defaultValue);
+
+  // Animation values
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const opacityAnim = useRef(new Animated.Value(1)).current;
 
   const amount = useMemo(() => {
     if (isControlled) {
@@ -178,7 +141,37 @@ export const AmountInput: React.FC<AmountInputProps> = ({
     return internalValue;
   }, [isControlled, internalValue, value]);
 
-  const resolvedShowMax = showMaxButton ?? Boolean(onMaxPress);
+  // Trigger animation when amount changes
+  useEffect(() => {
+    Animated.sequence([
+      Animated.parallel([
+        Animated.spring(scaleAnim, {
+          toValue: 1.08,
+          useNativeDriver: true,
+          speed: 50,
+          bounciness: 10,
+        }),
+        Animated.timing(opacityAnim, {
+          toValue: 0.85,
+          duration: 80,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.parallel([
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          useNativeDriver: true,
+          speed: 40,
+          bounciness: 8,
+        }),
+        Animated.timing(opacityAnim, {
+          toValue: 1,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start();
+  }, [amount, scaleAnim, opacityAnim]);
 
   const setAmount = useCallback(
     (next: string) => {
@@ -252,20 +245,29 @@ export const AmountInput: React.FC<AmountInputProps> = ({
 
   const handleKeypadPress = useCallback(
     (key: KeypadKey) => {
+      // Haptic feedback
       if (key === BACKSPACE_KEY) {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         handleDelete();
       } else if (key === '.') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         handleDecimalPress();
       } else {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         handleDigitPress(key);
       }
     },
     [handleDecimalPress, handleDelete, handleDigitPress],
   );
 
-  const handleContinue = useCallback(() => {
-    onContinue?.(amount);
-  }, [amount, onContinue]);
+  const handleQuickAmount = useCallback(
+    (quickAmount: number) => {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      setAmount(quickAmount.toString());
+      onQuickAmountSelect?.(quickAmount);
+    },
+    [onQuickAmountSelect, setAmount],
+  );
 
   const resolvedStatus: AmountInputStatus = useMemo(() => {
     if (status) {
@@ -274,9 +276,12 @@ export const AmountInput: React.FC<AmountInputProps> = ({
     if (errorText) {
       return 'error';
     }
+    if (successText) {
+      return 'success';
+    }
     const display = ensureDisplayValue(amount);
     return display === '0' || display === '0.' ? 'empty' : 'default';
-  }, [amount, errorText, status]);
+  }, [amount, errorText, status, successText]);
 
   const displayValue = useMemo(() => ensureDisplayValue(amount), [amount]);
 
@@ -289,141 +294,112 @@ export const AmountInput: React.FC<AmountInputProps> = ({
 
   const amountColor =
     resolvedStatus === 'error'
-      ? 'text-[#FB088F]'
+      ? 'text-red-500'
       : resolvedStatus === 'empty'
-      ? 'text-[#B8BCC8]'
-      : 'text-[#070914]';
-
-  const helperColor =
-    resolvedStatus === 'error' ? 'text-[#FB088F]' : 'text-[#6B7280]';
-
-  const continueIsDisabled =
-    continueDisabled !== undefined
-      ? continueDisabled
-      : resolvedStatus === 'empty';
+      ? 'text-gray-300'
+      : 'text-gray-900';
 
   return (
-    <View
-      className={`rounded-3xl bg-white px-6 py-6 shadow-sm ${className}`}
-      {...rest}
-    >
-      {title && (
-        <Text className="text-center text-[18px] font-body-semibold text-[#070914]">
-          {title}
-        </Text>
-      )}
-
-      {(sourceLabel || sourceValue || minLabel || minValue) && (
-        <View className="mt-6 rounded-[24px] border border-[#F1F3F5] bg-[#F9FAFB] px-4 py-3">
-          <View className="flex-row items-center justify-between">
-            {(sourceLabel || sourceValue) && (
-              <TouchableOpacity
-                className="flex-1"
-                activeOpacity={0.7}
-                onPress={onSourcePress}
-                disabled={!onSourcePress}
-              >
-                {sourceLabel && (
-                  <Text className="text-[12px] font-body-medium uppercase tracking-wide text-[#9CA3AF]">
-                    {sourceLabel}
-                  </Text>
-                )}
-                <View className="mt-1 flex-row items-center gap-x-2">
-                  <Text className="text-[15px] font-body-semibold text-[#070914]">
-                    {sourceValue}
-                  </Text>
-                  {onSourcePress && (
-                    <Icon
-                      name="chevron-down"
-                      size={16}
-                      color="#9CA3AF"
-                      strokeWidth={2}
-                    />
-                  )}
-                </View>
-              </TouchableOpacity>
+    <View className={`flex-1 bg-white px-4 ${className}`} {...rest}>
+      {/* Header */}
+      {(title || onBack || onClose) && (
+        <View className="flex-row items-center justify-between py-4">
+          <TouchableOpacity
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              onBack?.();
+            }}
+            className="h-10 w-10 items-center justify-center"
+            activeOpacity={0.7}
+          >
+            {onBack && (
+              <Icon name="chevron-left" size={24} color="#1F2937" />
             )}
+          </TouchableOpacity>
 
-            {(minLabel || minValue) && (
-              <View className="items-end">
-                {minLabel && (
-                  <Text className="text-[12px] font-body-medium uppercase tracking-wide text-[#9CA3AF]">
-                    {minLabel}
-                  </Text>
-                )}
-                {minValue && (
-                  <Text className="mt-1 text-[14px] font-body-semibold text-[#FB088F]">
-                    {minValue}
-                  </Text>
-                )}
-              </View>
-            )}
-          </View>
+          {title && (
+            <Text className="flex-1 text-center text-base font-body-semibold text-gray-900">
+              {title}
+            </Text>
+          )}
+
+          <TouchableOpacity
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              onClose?.();
+            }}
+            className="h-10 w-10 items-center justify-center"
+            activeOpacity={0.7}
+          >
+            {onClose && <Icon name="x" size={24} color="#1F2937" />}
+          </TouchableOpacity>
         </View>
       )}
 
-      <View className="mt-8 items-center">
-        <Text
-          className={`text-[44px] font-body-bold leading-none ${amountColor}`}
+      {/* Amount Display */}
+      <View className="mt-16 items-center">
+        <Animated.Text
+          className={`text-[80px] font-body-bold leading-none ${amountColor}`}
+          style={{
+            transform: [{ scale: scaleAnim }],
+            opacity: opacityAnim,
+          }}
         >
           {currencySymbol}
           {displayValue}
-        </Text>
-        {helperText && (
-          <Text className={`mt-2 text-sm font-body-medium ${helperColor}`}>
-            {helperText}
-          </Text>
-        )}
-        {errorText && (
-          <View className="mt-3 flex-row items-center gap-x-2">
-            <Icon
-              name="alert-triangle"
-              size={16}
-              color="#FB088F"
-              strokeWidth={2}
-            />
-            <Text className="text-sm font-body-medium text-[#FB088F]">
-              {errorText}
+        </Animated.Text>
+
+        {/* Token Info */}
+        {tokenInfo && (
+          <View className="mt-6 flex-row items-center gap-x-2">
+            {tokenIcon}
+            <Text className="text-base font-body-medium text-gray-700">
+              {tokenInfo}
             </Text>
           </View>
         )}
+
+        {/* Error/Success Message */}
+        {errorText && (
+          <Text className="mt-6 text-sm font-body-medium text-red-500">
+            {errorText}
+          </Text>
+        )}
+        {successText && (
+          <Text className="mt-6 text-sm font-body-medium text-green-500">
+            {successText}
+          </Text>
+        )}
       </View>
 
-      {(availableBalanceLabel || availableBalanceValue || resolvedShowMax) && (
-        <View className="mt-8 flex-row items-center justify-between">
-          <View>
-            {availableBalanceLabel && (
-              <Text className="text-[12px] font-body-medium uppercase tracking-wide text-[#9CA3AF]">
-                {availableBalanceLabel}
-              </Text>
-            )}
-            {availableBalanceValue && (
-              <Text className="mt-1 text-[14px] font-body-semibold text-[#070914]">
-                {availableBalanceValue}
-              </Text>
-            )}
-          </View>
 
-          {resolvedShowMax && (
+   <View className="mt-auto pb-8 gap-y-4">
+      {/* Quick Amount Buttons */}
+      {quickAmounts && quickAmounts.length > 0 && (
+        <View className="mt-12 flex-row items-center justify-center gap-x-3 px-4">
+          {quickAmounts.map((qa) => (
             <TouchableOpacity
-              onPress={onMaxPress}
+              key={qa}
+              onPress={() => handleQuickAmount(qa)}
               activeOpacity={0.7}
-              className="rounded-full bg-[#070914] px-4 py-2"
+              className="flex-1 rounded-full border-2 border-gray-800 py-3"
             >
-              <Text className="text-[13px] font-body-semibold text-white">
-                Max
+              <Text className="text-center text-base font-body-semibold text-gray-900">
+                {currencySymbol}
+                {qa}
               </Text>
             </TouchableOpacity>
-          )}
+          ))}
         </View>
       )}
 
-      <View className="mt-6">
+      {/* Keypad */}
+       <View className=" pb-8">
         {keypadRows.map((row, rowIndex) => (
           <View
             key={`row-${rowIndex}`}
-            className={`flex-row items-center justify-between ${
-              rowIndex === 0 ? '' : 'mt-4'
+            className={`flex-row items-center justify-around ${
+              rowIndex === 0 ? '' : 'mt-3'
             }`}
           >
             {row.map((key) => {
@@ -436,19 +412,23 @@ export const AmountInput: React.FC<AmountInputProps> = ({
               return (
                 <TouchableOpacity
                   key={key.toString()}
-                  className="mx-1 h-16 flex-1 items-center justify-center rounded-2xl bg-[#F4F4F5]"
-                  activeOpacity={isDisabled ? 1 : 0.8}
+                  className="h-20 w-20 items-center justify-center"
+                  activeOpacity={isDisabled ? 1 : 0.6}
                   onPress={() => !isDisabled && handleKeypadPress(key)}
                 >
                   {isBackspace ? (
                     <Icon
-                      name="backspace"
+                      name="delete-back-outline"
                       library="ionicons"
-                      size={26}
-                      color="#070914"
+                      size={32}
+                      color="#1F2937"
                     />
                   ) : (
-                    <Text className="text-[20px] font-body-semibold text-[#070914]">
+                    <Text
+                      className={`text-[32px] font-body-semibold ${
+                        isDisabled ? 'text-gray-300' : 'text-gray-900'
+                      }`}
+                    >
                       {key}
                     </Text>
                   )}
@@ -458,21 +438,9 @@ export const AmountInput: React.FC<AmountInputProps> = ({
           </View>
         ))}
       </View>
-
-      <View className="mt-8">
-        <Button
-          title={continueLabel}
-          onPress={handleContinue}
-          disabled={continueIsDisabled}
-          className="bg-[#070914]"
-        />
-      </View>
-
-      {footerNote && (
-        <Text className="mt-4 text-center text-[13px] font-body-medium text-[#6B7280]">
-          {footerNote}
-        </Text>
-      )}
+    </View>
+    
+    
     </View>
   );
 };

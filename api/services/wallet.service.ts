@@ -19,6 +19,8 @@ import type {
   GetPricesRequest,
   GetPricesResponse,
   GetNetworksResponse,
+  GetWalletAddressesRequest,
+  WalletAddressesResponse,
   ApiResponse,
 } from '../types';
 
@@ -32,6 +34,7 @@ const WALLET_ENDPOINTS = {
   DEPOSIT_ADDRESS: '/wallet/deposit-address',
   PRICES: '/wallet/prices',
   NETWORKS: '/wallet/networks',
+  ADDRESSES: '/v1/wallets/:chain/address', // Full path: /api/v1/wallets/:chain/address
 };
 
 export const walletService = {
@@ -39,14 +42,14 @@ export const walletService = {
    * Get wallet balance and tokens
    */
   async getBalance(): Promise<WalletBalance> {
-    return apiClient.get<ApiResponse<WalletBalance>>(WALLET_ENDPOINTS.BALANCE);
+    return apiClient.get<WalletBalance>(WALLET_ENDPOINTS.BALANCE);
   },
 
   /**
    * Get transaction history
    */
   async getTransactions(params?: GetTransactionsRequest): Promise<GetTransactionsResponse> {
-    return apiClient.get<ApiResponse<GetTransactionsResponse>>(
+    return apiClient.get<GetTransactionsResponse>(
       WALLET_ENDPOINTS.TRANSACTIONS,
       { params }
     );
@@ -65,7 +68,7 @@ export const walletService = {
    * Create transfer/withdrawal
    */
   async createTransfer(data: CreateTransferRequest): Promise<CreateTransferResponse> {
-    return apiClient.post<ApiResponse<CreateTransferResponse>>(
+    return apiClient.post<CreateTransferResponse>(
       WALLET_ENDPOINTS.TRANSFER,
       data
     );
@@ -75,7 +78,7 @@ export const walletService = {
    * Validate wallet address
    */
   async validateAddress(data: ValidateAddressRequest): Promise<ValidateAddressResponse> {
-    return apiClient.post<ApiResponse<ValidateAddressResponse>>(
+    return apiClient.post<ValidateAddressResponse>(
       WALLET_ENDPOINTS.VALIDATE_ADDRESS,
       data
     );
@@ -85,7 +88,7 @@ export const walletService = {
    * Estimate transaction fee
    */
   async estimateFee(data: EstimateFeeRequest): Promise<EstimateFeeResponse> {
-    return apiClient.post<ApiResponse<EstimateFeeResponse>>(
+    return apiClient.post<EstimateFeeResponse>(
       WALLET_ENDPOINTS.ESTIMATE_FEE,
       data
     );
@@ -95,7 +98,7 @@ export const walletService = {
    * Get deposit address for a token
    */
   async getDepositAddress(data: GetDepositAddressRequest): Promise<GetDepositAddressResponse> {
-    return apiClient.post<ApiResponse<GetDepositAddressResponse>>(
+    return apiClient.post<GetDepositAddressResponse>(
       WALLET_ENDPOINTS.DEPOSIT_ADDRESS,
       data
     );
@@ -105,7 +108,7 @@ export const walletService = {
    * Get token prices
    */
   async getPrices(data: GetPricesRequest): Promise<GetPricesResponse> {
-    return apiClient.post<ApiResponse<GetPricesResponse>>(
+    return apiClient.post<GetPricesResponse>(
       WALLET_ENDPOINTS.PRICES,
       data
     );
@@ -115,7 +118,16 @@ export const walletService = {
    * Get available networks
    */
   async getNetworks(): Promise<GetNetworksResponse> {
-    return apiClient.get<ApiResponse<GetNetworksResponse>>(WALLET_ENDPOINTS.NETWORKS);
+    return apiClient.get<GetNetworksResponse>(WALLET_ENDPOINTS.NETWORKS);
+  },
+
+  /**
+   * Get wallet addresses, optionally filtered by chain
+   */
+  async getWalletAddresses(params?: GetWalletAddressesRequest): Promise<WalletAddressesResponse> {
+    const chain = params?.chain || 'ethereum'; // Default to ethereum if not specified
+    const endpoint = WALLET_ENDPOINTS.ADDRESSES.replace(':chain', chain);
+    return apiClient.get<WalletAddressesResponse>(endpoint);
   },
 };
 

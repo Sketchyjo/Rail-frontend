@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { walletService } from '../api/services';
 
 export interface Token {
   id: string;
@@ -276,26 +277,38 @@ export const useWithdrawalStore = create<WithdrawalState & WithdrawalActions>((s
     set({ showConfirmModal: false, step: 'processing', isLoading: true });
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const { recipientAddress, selectedToken, amount } = get();
       
-      // Add timestamp and tx hash
+      if (!selectedToken || !recipientAddress || !amount) {
+        throw new Error('Missing required fields');
+      }
+      
+      // Call real API to create transfer
+      const response = await walletService.createTransfer({
+        toAddress: recipientAddress,
+        token: selectedToken.symbol,
+        amount,
+        chain: selectedToken.network, // Use network from selected token
+      });
+      
+      // Update transaction with real data from API
       const transaction = get().transaction;
       if (transaction) {
-        transaction.timestamp = new Date().toLocaleString('en-GB', {
+        transaction.timestamp = new Date(response.transaction.createdAt).toLocaleString('en-GB', {
           day: 'numeric',
           month: 'short',
           year: 'numeric',
           hour: '2-digit',
           minute: '2-digit',
         });
-        transaction.txHash = '0x' + Math.random().toString(16).substr(2, 64);
+        transaction.txHash = response.transaction.txHash || response.transaction.id;
         set({ transaction });
       }
       
       // Success
       set({ step: 'success', isLoading: false });
     } catch (error) {
+      console.error('[WithdrawalStore] Withdrawal failed:', error);
       set({ 
         step: 'amount',
         showConfirmModal: false,

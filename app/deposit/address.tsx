@@ -17,6 +17,9 @@ import QRCode from 'react-native-qrcode-skia';
 import DepositScreenHeader from '@/components/deposit/ScreenHeader';
 import { getNetworkForStablecoin, getStablecoinById } from '@/constants/depositOptions';
 import { breakpoints } from '@/design/tokens';
+import { useWalletAddresses } from '@/api/hooks';
+import { getTestnetChain } from '@/utils/chains';
+import { QRShimmer, Shimmer } from '@/components/atoms/Shimmer';
 
 const FallbackScreen = () => (
   <SafeAreaView className="flex-1 bg-white">
@@ -88,6 +91,22 @@ const DepositAddressScreen = () => {
     () => getNetworkForStablecoin(coinParam, networkParam),
     [coinParam, networkParam]
   );
+  
+  // Get the testnet chain for this network
+  const chain = useMemo(() => getTestnetChain(networkParam), [networkParam]);
+
+  // Fetch wallet addresses filtered by chain
+  const { data: walletData, isLoading, isError, error } = useWalletAddresses(chain);
+  console.log('walletData', walletData);
+  
+  // Get the actual wallet address from API (single object, not array)
+  const walletAddress = useMemo(() => {
+    if (!walletData?.address) {
+      return null;
+    }
+    return walletData.address;
+  }, [walletData]);
+
   const { width } = useWindowDimensions();
   const isCompactWidth = width <= breakpoints.sm;
   const isCondensedWidth = width <= breakpoints.md;
@@ -106,10 +125,20 @@ const DepositAddressScreen = () => {
     return <FallbackScreen />;
   }
 
+  // Use wallet address or show placeholder while loading
+  // Keep UI rendered, just show placeholder address during load
+  const displayAddress = walletAddress || 'Loading...';
+  const isAddressReady = !!walletAddress && !isLoading;
+  
+  // Check for specific error types
+  const is401 = error?.error?.code === 'HTTP_401';
+  const is404 = error?.error?.code === 'HTTP_404';
+  const hasError = isError && !walletAddress && !is404; // Don't show error for 404
+
   const shareAddress = async () => {
     try {
       await Share.share({
-        message: `${stablecoin.symbol} • ${network.name}\n${network.address}`,
+        message: `${stablecoin.symbol} • ${network.name}\n${displayAddress}`,
       });
     } catch (error) {
       Alert.alert('Unable to share address right now.');
@@ -118,7 +147,7 @@ const DepositAddressScreen = () => {
 
   const copyAddress = async () => {
     try {
-      await Clipboard.setStringAsync(network.address);
+      await Clipboard.setStringAsync(displayAddress);
       Alert.alert('Address copied', 'Wallet address copied to clipboard.');
     } catch (error) {
       Alert.alert('Unable to copy address right now.');
@@ -151,6 +180,20 @@ const DepositAddressScreen = () => {
         }}
         showsVerticalScrollIndicator={false}
       >
+        {/* Error Banner */}
+        {hasError && (
+          <View className="mb-4 rounded-2xl bg-red-50 px-4 py-3">
+            <Text className="text-sm font-body-bold text-red-900">
+              {is401 ? 'Authentication required' : 'Unable to load wallet address'}
+            </Text>
+            <Text className="mt-1 text-xs text-red-700">
+              {is401 
+                ? 'Please sign in again to view your wallet address.'
+                : (error?.error?.message || 'Please check your connection and try again.')}
+            </Text>
+          </View>
+        )}
+
         <View
           style={{
             borderRadius: cardRadius,
@@ -160,13 +203,17 @@ const DepositAddressScreen = () => {
           className="bg-white"
         >
           <View className="items-center">
-            <QRCode value={network.address} size={qrSize} />
+            {/* QR Code with animated shimmer skeleton */}
+            {isAddressReady ? (
+              <QRCode value={displayAddress} size={qrSize} />
+            ) : (
+              <QRShimmer size={qrSize} />
+            )}
             <Text className="mt-6 text-lg font-body-bold text-[#0B1120]">
               Your {network.name} Address
             </Text>
             <Text className="mt-2 text-center text-sm leading-5 text-[#6B7280]">
-              Scan this code or copy this wallet address to receive {stablecoin.symbol} on{' '}
-              {network.name}.
+              Scan this code or copy this wallet address to receive {stablecoin.symbol} on {network.name}.
             </Text>
           </View>
 
@@ -183,22 +230,34 @@ const DepositAddressScreen = () => {
                 <Text className="text-xs uppercase tracking-[1.5px] text-[#6B7280]">
                   Wallet Address
                 </Text>
-                <Text className="mt-2 text-[15px] font-body-bold leading-6 text-[#0B1120]" selectable>
-                  {network.address}
-                </Text>
+                {isAddressReady ? (
+                  <Text className="mt-2 text-[15px] font-body-bold leading-6 text-[#0B1120]" selectable>
+                    {displayAddress}
+                  </Text>
+                ) : (
+                  <View className="mt-2" style={{ gap: 8 }}>
+                    {/* Animated shimmer skeleton for address */}
+                    <Shimmer width="100%" height={20} borderRadius={4} />
+                    <Shimmer width="80%" height={20} borderRadius={4} />
+                  </View>
+                )}
               </View>
               <TouchableOpacity
                 onPress={copyAddress}
                 activeOpacity={0.85}
+                disabled={!isAddressReady}
                 className="mt-1 h-10 w-10 items-center justify-center rounded-full bg-[#F5F7FB]"
                 accessibilityLabel="Copy wallet address"
+                style={{ opacity: isAddressReady ? 1 : 0.5 }}
               >
                 <Copy size={18} color="#111827" strokeWidth={1.5} />
               </TouchableOpacity>
             </View>
             <View className="mt-5 border-t border-[#E5E7EB] pt-4">
               <Text className="text-xs uppercase tracking-[1.5px] text-[#6B7280]">Network</Text>
-              <Text className="mt-1 text-sm font-body-bold text-[#0B1120]">{network.name}</Text>
+              <Text className="mt-1 text-sm font-body-bold text-[#0B1120]">
+                {network.name} {!isAddressReady && '(Loading...)'}
+              </Text>
             </View>
           </View>
         </View>
@@ -210,12 +269,16 @@ const DepositAddressScreen = () => {
             borderRadius: shareButtonRadius,
             paddingHorizontal: shareButtonPaddingHorizontal,
             paddingVertical: shareButtonPaddingVertical,
+            opacity: isAddressReady ? 1 : 0.5,
           }}
           activeOpacity={0.9}
+          disabled={!isAddressReady}
           onPress={shareAddress}
         >
           <Share2 size={18} color="#FFFFFF" strokeWidth={1.5} />
-          <Text className="ml-2 text-sm font-body-bold text-white">Share wallet address</Text>
+          <Text className="ml-2 text-sm font-body-bold text-white">
+            {isAddressReady ? 'Share wallet address' : 'Loading address...'}
+          </Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

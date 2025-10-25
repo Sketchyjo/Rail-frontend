@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { authService, passcodeService } from '../api/services';
 
 export interface User {
   id: string;
@@ -100,22 +101,15 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       login: async (email: string, password: string) => {
         set({ isLoading: true, error: null });
         try {
-          // TODO: Replace with actual API call
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          
-          // Mock successful login
-          const mockUser: User = {
-            id: '1',
-            email,
-            fullName: 'John Doe',
-            emailVerified: true,
-          };
+          const response = await authService.login({ email, password });
           
           set({
-            user: mockUser,
+            user: response.user,
             isAuthenticated: true,
-            accessToken: 'mock-access-token',
-            refreshToken: 'mock-refresh-token',
+            accessToken: response.accessToken,
+            refreshToken: response.refreshToken,
+            onboardingStatus: response.user.onboardingStatus || null,
+            hasPasscode: response.user.hasPasscode || false,
             isLoading: false,
           });
         } catch (error) {
@@ -130,20 +124,24 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       logout: async () => {
         set({ isLoading: true });
         try {
-          // TODO: Replace with actual API call to invalidate tokens
-          await new Promise(resolve => setTimeout(resolve, 500));
+          // Call API to invalidate tokens on server
+          await authService.logout().catch(() => {
+            // Ignore errors - still clear local state
+          });
           
           // Clear all auth state on logout
           set({
             ...initialState,
-            // Reset the store completely
             hasPasscode: false,
             hasCompletedOnboarding: false,
           });
         } catch (error) {
+          // Even if logout fails, clear local state
           set({
+            ...initialState,
+            hasPasscode: false,
+            hasCompletedOnboarding: false,
             error: error instanceof Error ? error.message : 'Logout failed',
-            isLoading: false,
           });
         }
       },
@@ -151,21 +149,13 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       register: async (email: string, password: string, name: string) => {
         set({ isLoading: true, error: null });
         try {
-          // TODO: Replace with actual API call
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          const response = await authService.register({ email, password, name });
           
-          const mockUser: User = {
-            id: '1',
-            email,
-            fullName: name,
-            emailVerified: false,
-          };
-          
+          // Store pending email but DON'T authenticate yet - user needs to verify
           set({
-            user: mockUser,
-            isAuthenticated: true,
-            accessToken: 'mock-access-token',
-            refreshToken: 'mock-refresh-token',
+            pendingVerificationEmail: email || response.identifier,
+            isAuthenticated: false,
+            user: null,
             isLoading: false,
           });
         } catch (error) {
@@ -186,11 +176,11 @@ export const useAuthStore = create<AuthState & AuthActions>()(
 
         set({ isLoading: true });
         try {
-          // TODO: Replace with actual API call
-          await new Promise(resolve => setTimeout(resolve, 500));
+          const response = await authService.refreshToken({ refreshToken });
           
           set({
-            accessToken: 'new-mock-access-token',
+            accessToken: response.token,
+            refreshToken: response.refreshToken,
             isLoading: false,
           });
         } catch (error) {
@@ -198,8 +188,9 @@ export const useAuthStore = create<AuthState & AuthActions>()(
             error: error instanceof Error ? error.message : 'Session refresh failed',
             isLoading: false,
           });
-          // If refresh fails, logout
+          // If refresh fails, logout user
           get().logout();
+          throw error;
         }
       },
 
@@ -240,13 +231,35 @@ export const useAuthStore = create<AuthState & AuthActions>()(
 
       // Passcode/Biometric
       setPasscode: async (passcode: string) => {
-        // TODO: Securely store passcode
-        set({ hasPasscode: true });
+        try {
+          await passcodeService.createPasscode({ 
+            passcode, 
+            confirmPasscode: passcode 
+          });
+          set({ hasPasscode: true });
+        } catch (error) {
+          console.error('[AuthStore] Failed to set passcode:', error);
+          throw error;
+        }
       },
 
       verifyPasscode: async (passcode: string) => {
-        // TODO: Verify against stored passcode
-        return true;
+        try {
+          const response = await passcodeService.verifyPasscode({ passcode });
+          
+          // Store the session token if verification succeeds
+          if (response.verified) {
+            set({
+              passcodeSessionToken: response.sessionToken,
+              passcodeSessionExpiresAt: response.expiresAt,
+            });
+          }
+          
+          return response.verified;
+        } catch (error) {
+          console.error('[AuthStore] Failed to verify passcode:', error);
+          return false;
+        }
       },
 
       enableBiometric: () => {

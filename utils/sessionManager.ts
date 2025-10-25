@@ -32,10 +32,10 @@ export class SessionManager {
    * Refresh access token
    */
   static async refreshToken(): Promise<void> {
-    const { refreshToken } = useAuthStore.getState();
+    const { refreshToken, isAuthenticated } = useAuthStore.getState();
     
-    if (!refreshToken) {
-      console.warn('[SessionManager] No refresh token available');
+    if (!refreshToken || !isAuthenticated) {
+      console.warn('[SessionManager] No refresh token available or not authenticated');
       this.handleSessionExpired();
       return;
     }
@@ -51,8 +51,10 @@ export class SessionManager {
 
       console.log('[SessionManager] Token refreshed successfully');
       
-      // Schedule next refresh
-      this.scheduleTokenRefresh(response.expiresAt);
+      // Schedule next refresh if expiresAt is available
+      if (response.expiresAt) {
+        this.scheduleTokenRefresh(response.expiresAt);
+      }
     } catch (error) {
       console.error('[SessionManager] Token refresh failed:', error);
       this.handleSessionExpired();
@@ -95,14 +97,14 @@ export class SessionManager {
    * Handle session expiration
    */
   private static handleSessionExpired(): void {
-    console.log('[SessionManager] Session expired, logging out user');
+    console.log('[SessionManager] Session expired, clearing auth state');
     
     // Clear any refresh timers
     this.cleanup();
     
-    // Logout user
-    const { logout } = useAuthStore.getState();
-    logout();
+    // Clear auth state (don't call logout as it may cause API calls)
+    const { reset } = useAuthStore.getState();
+    reset();
   }
 
   /**
