@@ -172,7 +172,7 @@ export default function VerifyEmail() {
           </Text>
           <View className="mt-4">
             <Text
-              className="font-sf-pro-medium text-[18px] text-gray-600"
+              className="font-body-medium text-[18px] text-gray-600"
               accessibilityLabel="The code has been sent to">
               The code has been sent to
             </Text>
@@ -187,7 +187,7 @@ export default function VerifyEmail() {
         {/* Instructions */}
         <View className="mb-8">
           <Text
-            className="font-sf-pro-medium text-base text-gray-600"
+            className="font-body-medium text-base text-gray-600"
             accessibilityLabel="Please check your inbox and paste the code from the email below">
             Please check your inbox and{'\n'}paste the code from the email below
           </Text>
@@ -208,7 +208,7 @@ export default function VerifyEmail() {
             accessibilityLabel="Paste verification code"
             accessibilityHint="Tap to paste verification code from clipboard"
             accessibilityRole="button">
-            <Text className="font-sf-pro-medium text-[14px] text-gray-600">Paste</Text>
+            <Text className="font-body-medium text-[14px] text-gray-600">Paste</Text>
           </TouchableOpacity>
         </View>
 
@@ -237,13 +237,13 @@ export default function VerifyEmail() {
               accessibilityLabel="Didn't receive the code? Resend"
               accessibilityHint="Tap to request a new verification code"
               accessibilityRole="button">
-              <Text className="font-sf-pro-rounded-medium text-base text-gray-900">
+              <Text className="font-body-rounded-medium text-base text-gray-900">
                 {isResendLoading ? 'Sending...' : "Didn't receive the code? Resend"}
               </Text>
             </TouchableOpacity>
           ) : (
             <Text
-              className="py-2 font-sf-pro-semibold text-base text-gray-500"
+              className="py-2 font-label text-base text-gray-500"
               accessibilityLabel={`Resend code in ${resendTimer} seconds`}>
               Resend code in {resendTimer}s
             </Text>

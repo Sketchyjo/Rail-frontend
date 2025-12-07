@@ -69,7 +69,7 @@ export const InputField: React.FC<InputFieldProps> = ({
   return (
     <View className="mb-4">
       {/* Label */}
-      <Text className="font-sf-pro-medium text-[14px]  mb-2">
+      <Text className="font-body-medium text-[14px]  mb-2">
         {label}
         {required && <Text className="text-semantic-danger"> *</Text>}
       </Text>

@@ -6,7 +6,7 @@
  */
 
 export const FONT_FAMILIES = {
-  // PramukhRounded font family (primary font)
+  // PramukhRounded font family (headings/display)
   PRAMUKH_ROUNDED: {
     EXTRALIGHT: 'PramukhRounded-Extralight',
     LIGHT: 'PramukhRounded-Light',
@@ -17,23 +17,13 @@ export const FONT_FAMILIES = {
     EXTRABOLD: 'PramukhRounded-Extrabold',
     BLACK: 'PramukhRounded-Black',
   },
-} as const;
-
-/**
- * Font weight mappings for better semantic usage
- */
-export const FONT_WEIGHTS = {
-  PRAMUKH_ROUNDED: {
-    100: FONT_FAMILIES.PRAMUKH_ROUNDED.EXTRALIGHT,
-    200: FONT_FAMILIES.PRAMUKH_ROUNDED.EXTRALIGHT,
-    300: FONT_FAMILIES.PRAMUKH_ROUNDED.LIGHT,
-    350: FONT_FAMILIES.PRAMUKH_ROUNDED.SEMILIGHT,
-    400: FONT_FAMILIES.PRAMUKH_ROUNDED.REGULAR,
-    500: FONT_FAMILIES.PRAMUKH_ROUNDED.REGULAR,
-    600: FONT_FAMILIES.PRAMUKH_ROUNDED.SEMIBOLD,
-    700: FONT_FAMILIES.PRAMUKH_ROUNDED.BOLD,
-    800: FONT_FAMILIES.PRAMUKH_ROUNDED.EXTRABOLD,
-    900: FONT_FAMILIES.PRAMUKH_ROUNDED.BLACK,
+  // Poppins font family (body/UI text)
+  POPPINS: {
+    THIN: 'Poppins-Thin',
+    LIGHT: 'Poppins-Light',
+    REGULAR: 'Poppins-Regular',
+    MEDIUM: 'Poppins-Medium',
+    BOLD: 'Poppins-Bold',
   },
 } as const;
 
@@ -41,6 +31,7 @@ export const FONT_WEIGHTS = {
  * Font file paths for dynamic loading
  */
 export const FONT_FILES = {
+  // PramukhRounded
   [FONT_FAMILIES.PRAMUKH_ROUNDED.EXTRALIGHT]: require('../assets/fonts/PramukhRounded-Extralight.otf'),
   [FONT_FAMILIES.PRAMUKH_ROUNDED.LIGHT]: require('../assets/fonts/PramukhRounded-Light.otf'),
   [FONT_FAMILIES.PRAMUKH_ROUNDED.SEMILIGHT]: require('../assets/fonts/PramukhRounded-Semilight.otf'),
@@ -49,36 +40,38 @@ export const FONT_FILES = {
   [FONT_FAMILIES.PRAMUKH_ROUNDED.BOLD]: require('../assets/fonts/PramukhRounded-Bold.otf'),
   [FONT_FAMILIES.PRAMUKH_ROUNDED.EXTRABOLD]: require('../assets/fonts/PramukhRounded-Extrabold.otf'),
   [FONT_FAMILIES.PRAMUKH_ROUNDED.BLACK]: require('../assets/fonts/PramukhRounded-Black.otf'),
+  // Poppins
+  [FONT_FAMILIES.POPPINS.THIN]: require('../assets/fonts/Poppins-Thin.otf'),
+  [FONT_FAMILIES.POPPINS.LIGHT]: require('../assets/fonts/Poppins-Light.otf'),
+  [FONT_FAMILIES.POPPINS.REGULAR]: require('../assets/fonts/Poppins-Regular.otf'),
+  [FONT_FAMILIES.POPPINS.MEDIUM]: require('../assets/fonts/Poppins-Medium.otf'),
+  [FONT_FAMILIES.POPPINS.BOLD]: require('../assets/fonts/Poppins-Bold.otf'),
 } as const;
-
-/**
- * TypeScript types for font families
- */
-export type PramukhRoundedFontVariant = keyof typeof FONT_FAMILIES.PRAMUKH_ROUNDED;
-export type CustomFontFamily = (typeof FONT_FAMILIES.PRAMUKH_ROUNDED)[PramukhRoundedFontVariant];
 
 /**
  * Helper functions for font usage
  */
 export const FontHelpers = {
-  getPramukhRoundedByWeight: (weight: keyof typeof FONT_WEIGHTS.PRAMUKH_ROUNDED) => {
-    return FONT_WEIGHTS.PRAMUKH_ROUNDED[weight];
-  },
-
-  getAllFontNames: () => Object.values(FONT_FAMILIES.PRAMUKH_ROUNDED),
+  getAllFontNames: () => [
+    ...Object.values(FONT_FAMILIES.PRAMUKH_ROUNDED),
+    ...Object.values(FONT_FAMILIES.POPPINS),
+  ],
 };
 
 /**
  * Default font configurations for common use cases
  */
 export const FONT_PRESETS = {
+  // Headings - PramukhRounded
   HEADING_PRIMARY: FONT_FAMILIES.PRAMUKH_ROUNDED.BLACK,
   HEADING_SECONDARY: FONT_FAMILIES.PRAMUKH_ROUNDED.BOLD,
-  DISPLAY_CREATIVE: FONT_FAMILIES.PRAMUKH_ROUNDED.EXTRABOLD,
-  DISPLAY_ARTISTIC: FONT_FAMILIES.PRAMUKH_ROUNDED.BLACK,
-  BODY_TEXT: FONT_FAMILIES.PRAMUKH_ROUNDED.REGULAR,
-  BODY_TEXT_LIGHT: FONT_FAMILIES.PRAMUKH_ROUNDED.LIGHT,
-  BODY_TEXT_MEDIUM: FONT_FAMILIES.PRAMUKH_ROUNDED.SEMIBOLD,
-  BODY_TEXT_BOLD: FONT_FAMILIES.PRAMUKH_ROUNDED.BOLD,
-  CAPTION: FONT_FAMILIES.PRAMUKH_ROUNDED.REGULAR,
+  DISPLAY: FONT_FAMILIES.PRAMUKH_ROUNDED.BLACK,
+  // Body/UI - Poppins
+  BODY: FONT_FAMILIES.POPPINS.REGULAR,
+  BODY_LIGHT: FONT_FAMILIES.POPPINS.LIGHT,
+  BODY_MEDIUM: FONT_FAMILIES.POPPINS.MEDIUM,
+  BODY_BOLD: FONT_FAMILIES.POPPINS.BOLD,
+  BUTTON: FONT_FAMILIES.POPPINS.MEDIUM,
+  CAPTION: FONT_FAMILIES.POPPINS.REGULAR,
+  LABEL: FONT_FAMILIES.POPPINS.MEDIUM,
 } as const;

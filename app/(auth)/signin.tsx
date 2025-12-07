@@ -167,7 +167,7 @@ export default function SignIn() {
               />
 
               <TouchableOpacity onPress={() => router.push('/(auth)')} className="mt-4 self-center">
-                <Text className="text-center font-sf-pro-medium text-[14px] text-gray-900">
+                <Text className="text-center font-body-medium text-[14px] text-gray-900">
                   New to Rail? Sign up
                 </Text>
               </TouchableOpacity>

@@ -154,7 +154,7 @@ export const PhoneInput = forwardRef<TextInput, PhoneInputProps>(
                   className="flex-row items-center border-r border-gray-200 px-4 py-4"
                 >
                   <Text className="mr-1 text-lg">{selectedCountry.flag}</Text>
-                  <Text className="mr-1 font-sf-pro-medium text-base text-gray-700">
+                  <Text className="mr-1 font-body-medium text-base text-gray-700">
                     {selectedCountry.dialCode}
                   </Text>
                   <Ionicons name="chevron-down" size={16} color="#6B7280" />
@@ -169,7 +169,7 @@ export const PhoneInput = forwardRef<TextInput, PhoneInputProps>(
                   onChangeText={handleTextChange}
                   onFocus={handleFocus}
                   onBlur={handleBlur}
-                  className="px-4 py-4 font-sf-pro-medium text-base text-gray-900"
+                  className="px-4 py-4 font-body-medium text-base text-gray-900"
                   placeholderTextColor="#9CA3AF"
                   keyboardType="phone-pad"
                   textContentType="telephoneNumber"
@@ -185,7 +185,7 @@ export const PhoneInput = forwardRef<TextInput, PhoneInputProps>(
                         { translateY: labelTranslateY },
                       ],
                     }}
-                    className={`absolute left-4 font-sf-pro-medium text-gray-500 ${
+                    className={`absolute left-4 font-body-medium text-gray-500 ${
                       isFocused || value ? 'top-2 text-sm' : 'top-4 text-base'
                     }`}
                   >
@@ -213,7 +213,7 @@ export const PhoneInput = forwardRef<TextInput, PhoneInputProps>(
             <View className="mr-2 rounded-full bg-red-100 p-1">
               <Ionicons name="close-circle" size={16} color="#DC2626" />
             </View>
-            <Text className="font-sf-pro-medium text-sm text-red-700">{error}</Text>
+            <Text className="font-body-medium text-sm text-red-700">{error}</Text>
           </View>
         )}
 
@@ -230,7 +230,7 @@ export const PhoneInput = forwardRef<TextInput, PhoneInputProps>(
                 <TouchableOpacity onPress={() => setShowPicker(false)}>
                   <Ionicons name="close" size={24} color="#374151" />
                 </TouchableOpacity>
-                <Text className="font-sf-pro-semibold text-lg text-gray-900">
+                <Text className="font-label text-lg text-gray-900">
                   Select Country
                 </Text>
                 <View style={{ width: 24 }} />
@@ -249,10 +249,10 @@ export const PhoneInput = forwardRef<TextInput, PhoneInputProps>(
                 >
                   <Text className="mr-3 text-2xl">{country.flag}</Text>
                   <View className="flex-1">
-                    <Text className="font-sf-pro-medium text-base text-gray-900">
+                    <Text className="font-body-medium text-base text-gray-900">
                       {country.country}
                     </Text>
-                    <Text className="font-sf-pro-regular text-sm text-gray-500">
+                    <Text className="font-body text-sm text-gray-500">
                       {country.dialCode}
                     </Text>
                   </View>

@@ -97,7 +97,7 @@ function VideoSlide({ item }: { item: OnboardingSlide }) {
           className={`tracking-wides w-full font-display text-[50px] font-black uppercase ${item.textColor}`}>
           {item.title}
         </Text>
-        <Text className="mt-4 max-w-xs font-heading text-[18px] font-bold text-[#fff] opacity-80">
+        <Text className="mt-4 max-w-xs font-body text-[12px] text-[#fff] opacity-80">
           {item.description}
         </Text>
       </View>
@@ -200,7 +200,7 @@ export default function App() {
           onPress={() => router.push('/(auth)')}
         />
         <TouchableOpacity onPress={() => router.push('/login-passcode')}>
-          <Text className="font-sf-pro-medium text-center text-[14px] text-border-primary">
+          <Text className="text-center font-body-medium text-[14px] text-border-primary">
             Already have an account?
           </Text>
         </TouchableOpacity>

@@ -112,7 +112,7 @@ const OTPInputComponent: React.ForwardRefRenderFunction<OTPInputRef, OTPInputPro
       />
       {error && (
         <Text
-          className="font-sf-pro-rounded-regular mt-2 text-center text-sm text-red-500"
+          className="font-body mt-2 text-center text-sm text-red-500"
           accessibilityLabel={`Error: ${error}`}
           accessibilityRole="alert">
           {error}

@@ -55,25 +55,22 @@ module.exports = {
         overlay: 'rgba(30, 26, 62, 0.5)',
       },
       fontFamily: {
-        // Primary fonts
-        primary: ['PramukhRounded-Bold'],
-        secondary: ['PramukhRounded-Regular'],
-        
-        // Display and heading fonts
+        // Display/Headings - PramukhRounded
         display: ['PramukhRounded-Black'],
         heading: ['PramukhRounded-Bold'],
         subheading: ['PramukhRounded-Semibold'],
         
-        // Body text variants
-        body: ['PramukhRounded-Regular'],
-        'body-bold': ['PramukhRounded-Bold'],
-        'body-semibold': ['PramukhRounded-Semibold'],
-        'body-medium': ['PramukhRounded-Semibold'],
-        'body-light': ['PramukhRounded-Light'],
+        // Body/UI text - Poppins
+        body: ['Poppins-Regular'],
+        'body-light': ['Poppins-Light'],
+        'body-medium': ['Poppins-Medium'],
+        'body-bold': ['Poppins-Bold'],
         
-        // UI text variants
-        caption: ['PramukhRounded-Regular'],
-        label: ['PramukhRounded-Semibold'],
+        // Semantic aliases
+        button: ['Poppins-Medium'],
+        caption: ['Poppins-Regular'],
+        label: ['Poppins-Medium'],
+        description: ['Poppins-Regular'],
       },
       fontSize: {
         h1: ['36px', { lineHeight: '1.2' }],

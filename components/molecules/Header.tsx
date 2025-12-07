@@ -58,7 +58,7 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Title and Subtitle */}
           <View className="flex-1">
             <Text
-              className="text-black text-[24px] font-bold font-sf-pro-bold"
+              className="text-black text-[24px] font-bold font-body-bold"
               numberOfLines={1}
             >
               {title}

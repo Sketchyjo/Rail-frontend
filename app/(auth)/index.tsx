@@ -197,7 +197,7 @@ export default function SignUp() {
 
             {/* Terms */}
             <View className="mt-6 mb-6">
-              <Text className="text-center font-sf-pro-semibold text-sm text-gray-500">
+              <Text className="text-center font-label text-sm text-gray-500">
                 By creating an account, you agree to our{' '}
                 <Text className="text-gray-900 underline">Terms of Service</Text> and{' '}
                 <Text className="text-gray-900 underline">Privacy Policy</Text>
@@ -213,7 +213,7 @@ export default function SignUp() {
                 className="rounded-full font-body"
               />
               <TouchableOpacity onPress={() => router.push('/(auth)/signin')}>
-                <Text className="text-center font-sf-pro-medium text-[14px] text-gray-900">
+                <Text className="text-center font-body-medium text-[14px] text-gray-900">
                   Already a Rail user? Sign In
                 </Text>
               </TouchableOpacity>

@@ -99,7 +99,7 @@ export default function ForgotPassword() {
 
               {isSuccess && (
                 <View className="mt-4 rounded-2xl bg-gray-100 p-4">
-                  <Text className="font-sf-pro-medium text-[14px] text-gray-700">
+                  <Text className="font-body-medium text-[14px] text-gray-700">
                     Check your inbox for password reset instructions. If you do not see the email,
                     check your spam folder or try again in a few minutes.
                   </Text>
@@ -108,9 +108,9 @@ export default function ForgotPassword() {
             </View>
 
             <View className="mt-8 flex-row items-center justify-center">
-              <Text className="font-sf-pro-medium text-[14px] text-gray-600">Remember it?</Text>
+              <Text className="font-body-medium text-[14px] text-gray-600">Remember it?</Text>
               <TouchableOpacity onPress={() => router.replace('/(auth)/signin')} className="ml-2">
-                <Text className="font-sf-pro-medium text-[14px] text-primary">Back to sign in</Text>
+                <Text className="font-body-medium text-[14px] text-primary">Back to sign in</Text>
               </TouchableOpacity>
             </View>
           </View>
