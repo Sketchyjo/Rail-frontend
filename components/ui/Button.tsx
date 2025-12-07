@@ -86,7 +86,7 @@ export const Button = forwardRef<View, ButtonProps>(({
       ) : (
         <View className="flex-row items-center">
           {leftIcon && <View className="mr-2">{leftIcon}</View>}
-          <Text className={`font-body-semibold ${getTextSize()} ${getTextStyles()}`}>{title}</Text>
+          <Text className={`font-body-semibold text-[20px] ${getTextStyles()}`}>{title}</Text>
           {rightIcon && <View className="ml-2">{rightIcon}</View>}
         </View>
       )}

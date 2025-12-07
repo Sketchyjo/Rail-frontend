@@ -26,7 +26,8 @@
           "project": "YOUR_SENTRY_PROJECT"
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-video"
     ],
     "experiments": {
       "typedRoutes": true,

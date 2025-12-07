@@ -5,109 +5,116 @@ import {
   Text,
   FlatList,
   Dimensions,
-  Image,
   TouchableOpacity,
   StatusBar,
   ViewStyle,
 } from 'react-native';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { cards, onBoard1, onBoard2, onBoard3, onBoard4 } from '../assets/images';
+import { onBoard1, onBoard2, onBoard3, onBoard4 } from '../assets/images';
 import { Button } from '@/components/ui';
-import { safeLog } from '@/utils/logSanitizer';
 
 const { width, height } = Dimensions.get('window');
 
-// Define TypeScript interfaces
 interface OnboardingSlide {
   key: string;
   title: string;
   description: string;
-  image: any;
+  video: any;
   backgroundColor: string;
   textColor: string;
   indicatorBg: string;
   indicatorActiveBg: string;
-  textSmall?: string;
-  imageStyle?: {
-    width: number;
-    height: number;
-  };
+  videoStyle?: { width: number; height: number };
 }
 
-interface ViewableItemsChanged {
-  viewableItems: {
-    index: number;
-    item: OnboardingSlide;
-    key: string;
-    isViewable: boolean;
-  }[];
-}
-
-// --- Onboarding Data ---
-// This array holds the content for each slide.
 const onboardingSlides: OnboardingSlide[] = [
   {
     key: '1',
     title: 'Finance built\n for the internet generation.',
     description:
-      'We’re flipping the script—no suits, no gatekeeping, just DeFi speed and TradFi clout. Your money, your rules.',
-    image: onBoard1,
+      "We're flipping the script—no suits, no gatekeeping, just DeFi speed and TradFi clout. Your money, your rules.",
+    video: onBoard1,
     backgroundColor: '#000',
     textColor: 'text-[#fff]',
     indicatorBg: 'bg-white/30',
     indicatorActiveBg: 'bg-white',
-    imageStyle: { width: width, height: height * 0.7 },
+    videoStyle: { width: width, height: height * 0.7 },
   },
   {
     key: '2',
     title: 'Top-Up\nIn A Blink',
     description:
-      'Stablecoins on EVM & Solana hit your wallet faster than your ex’s apology. Zero waiting, all flexing.',
-    image: onBoard2,
+      "Stablecoins on EVM & Solana hit your wallet faster than your ex's apology. Zero waiting, all flexing.",
+    video: onBoard2,
     backgroundColor: '#000',
     textColor: 'text-[#fff]',
     indicatorBg: 'bg-white/30',
     indicatorActiveBg: 'bg-black',
-    imageStyle: { width: width, height: height * 0.7 },
+    videoStyle: { width: width, height: height * 0.7 },
   },
   {
     key: '3',
     title: 'Invest\nLike A Stan',
     description:
-      'Pre-built baskets curated by the smartest nerds. Tech moonshots, eco glow-ups—pick your vibe, we’ll handle the rest.',
-    image: onBoard3,
+      "Pre-built baskets curated by the smartest nerds. Tech moonshots, eco glow-ups—pick your vibe, we'll handle the rest.",
+    video: onBoard3,
     backgroundColor: '#000',
     textColor: 'text-[#fff]',
     indicatorBg: 'bg-slate-400/50',
     indicatorActiveBg: 'bg-slate-800',
-    imageStyle: { width: width, height: height * 0.7 },
+    videoStyle: { width: width, height: height * 0.7 },
   },
   {
     key: '4',
     title: 'Swipe\nStack & Repeat',
     description:
       'Cop a card that rounds up every latte and yeets the spare change straight into your portfolio. Cash-back? More like bag-back.',
-    image: onBoard4,
+    video: onBoard4,
     backgroundColor: '#000',
     textColor: 'text-[#fff]',
     indicatorBg: 'bg-slate-400/50',
     indicatorActiveBg: 'bg-slate-800',
-    imageStyle: { width: width * 1.05, height: height * 0.7 }, // Different size for cards image
+    videoStyle: { width: width * 1.05, height: height * 0.7 },
   },
 ];
 
-const SLIDE_INTERVAL = 6000; // 4 seconds
+const SLIDE_INTERVAL = 6000;
 
-// --- Main App Component ---
+function VideoSlide({ item }: { item: OnboardingSlide }) {
+  const player = useVideoPlayer(item.video, (player) => {
+    player.loop = true;
+    player.muted = true;
+    player.play();
+  });
+
+  return (
+    <View
+      className="h-full w-full flex-1 items-center overflow-hidden"
+      style={{ width: width, backgroundColor: item.backgroundColor }}>
+      <View className="w-full flex-1 items-start px-4 pt-24">
+        <Text
+          className={`tracking-wides w-full font-display text-[50px] font-black uppercase ${item.textColor}`}>
+          {item.title}
+        </Text>
+        <Text className="mt-4 max-w-xs font-heading text-[18px] font-bold text-[#fff] opacity-80">
+          {item.description}
+        </Text>
+      </View>
+      <VideoView
+        player={player}
+        style={[item.videoStyle, { position: 'absolute', bottom: 0 }]}
+        contentFit="cover"
+        nativeControls={false}
+      />
+    </View>
+  );
+}
+
 export default function App() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef<FlatList<OnboardingSlide>>(null);
   const [fontsReady, setFontsReady] = useState(false);
-  const onViewableItemsChangedRef = useRef((info: ViewableItemsChanged) => {
-    if (info.viewableItems.length > 0) {
-      setCurrentIndex(info.viewableItems[0].index);
-    }
-  }).current;
   const viewabilityConfigRef = useRef({ itemVisiblePercentThreshold: 50 }).current;
 
   useEffect(() => {
@@ -125,13 +132,10 @@ export default function App() {
 
   useEffect(() => {
     const timer = setInterval(() => {
-      // Move to the next slide, or loop back to the first
       const nextIndex = (currentIndex + 1) % onboardingSlides.length;
       flatListRef.current?.scrollToIndex({ animated: true, index: nextIndex });
       setCurrentIndex(nextIndex);
     }, SLIDE_INTERVAL);
-
-    // Clear the interval when the component is unmounted or index changes
     return () => clearInterval(timer);
   }, [currentIndex]);
 
@@ -139,32 +143,6 @@ export default function App() {
     return <View style={{ flex: 1, backgroundColor: '#949FFF' }} />;
   }
 
-  // --- Renders each slide item ---
-  const renderItem = ({ item }: { item: OnboardingSlide }) => (
-    <View
-      className="h-full w-full flex-1  items-center overflow-hidden"
-      style={{ width: width, backgroundColor: item.backgroundColor }}>
-      <View className="w-full flex-1 items-start px-4 pt-24 ">
-        <Text
-          className={`tracking-wides w-full font-display text-[50px] font-black uppercase ${item.textColor}`}>
-          {item.title}
-        </Text>
-        <Text className={`mt-4 max-w-xs font-heading text-[18px] font-bold  text-[#fff] opacity-80`}>
-          {item.description}
-        </Text>
-      </View>
-
-      <Image
-        source={item.image}
-        style={item.imageStyle}
-        className="absolute -bottom-0 "
-        resizeMode="cover"
-        onError={(e) => safeLog('Image failed to load', e.nativeEvent.error)}
-      />
-    </View>
-  );
-
-  // --- Renders the top progress indicators ---
   const renderIndicators = () => {
     const currentSlide = onboardingSlides[currentIndex];
     return (
@@ -197,7 +175,7 @@ export default function App() {
       <FlatList
         ref={flatListRef}
         data={onboardingSlides}
-        renderItem={renderItem}
+        renderItem={({ item }) => <VideoSlide item={item} />}
         horizontal
         pagingEnabled
         bounces={false}
@@ -215,8 +193,7 @@ export default function App() {
       />
       {renderIndicators()}
 
-      {/* --- "Get Started" Button --- */}
-      <View className="absolute bottom-6  w-full items-center gap-y-2 px-6">
+      <View className="absolute bottom-6 w-full items-center gap-y-2 px-6">
         <Button
           title="Create an account"
           variant="primary"

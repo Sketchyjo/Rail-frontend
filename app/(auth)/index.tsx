@@ -125,7 +125,7 @@ export default function SignUp() {
           <View className="px-6 pt-4">
             {/* Title */}
             <View className="mb-8 mt-4">
-              <Text className="font-body-bold text-[40px] text-gray-900">
+              <Text className="font-body-bold text-[60px] text-gray-900">
                 Enter you email address
               </Text>
               <Text className="mt-2 font-body-medium text-[14px] text-gray-600">
