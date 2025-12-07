@@ -41,8 +41,8 @@ export default function ConfirmPasscodeScreen() {
         {
           onSuccess: (response) => {
             // Passcode created successfully
-            // Navigate to onboarding
-            router.replace('/(auth)/onboarding/trust-device');
+            // Navigate to home screen
+            router.replace('/(tabs)');
           },
           onError: (err: any) => {
             const errorCode = err?.error?.code;

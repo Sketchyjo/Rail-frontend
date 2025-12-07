@@ -12,6 +12,18 @@ export interface User extends Omit<ApiUser, 'phone'> {
   phoneNumber?: string;
 }
 
+export interface RegistrationData {
+  firstName: string;
+  lastName: string;
+  dob: string;
+  street: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  phone: string;
+}
+
 interface AuthState {
   // User & Session
   user: User | null;
@@ -26,6 +38,7 @@ interface AuthState {
   hasCompletedOnboarding: boolean;
   onboardingStatus: string | null;
   currentOnboardingStep: string | null;
+  registrationData: RegistrationData;
   
   // Email Verification
   pendingVerificationEmail: string | null;
@@ -77,6 +90,10 @@ interface AuthActions {
   setHasCompletedOnboarding: (completed: boolean) => void;
   setHasPasscode: (hasPasscode: boolean) => void;
   
+  // Registration Flow
+  updateRegistrationData: (data: Partial<RegistrationData>) => void;
+  clearRegistrationData: () => void;
+  
   // Error handling
   setError: (error: string | null) => void;
   clearError: () => void;
@@ -105,6 +122,17 @@ const initialState: AuthState = {
   lockoutUntil: null,
   isLoading: false,
   error: null,
+  registrationData: {
+    firstName: '',
+    lastName: '',
+    dob: '',
+    street: '',
+    city: '',
+    state: '',
+    postalCode: '',
+    country: '',
+    phone: '',
+  },
 };
 
 // Custom storage adapter that uses SecureStore for sensitive data
@@ -448,6 +476,18 @@ export const useAuthStore = create<AuthState & AuthActions>()(
         set({ hasPasscode });
       },
 
+      updateRegistrationData: (data: Partial<RegistrationData>) => {
+        set((state) => ({
+          registrationData: { ...state.registrationData, ...data }
+        }));
+      },
+
+      clearRegistrationData: () => {
+        set({
+          registrationData: initialState.registrationData
+        });
+      },
+
       // Passcode/Biometric
       setPasscode: async (passcode: string) => {
         try {
@@ -538,6 +578,9 @@ export const useAuthStore = create<AuthState & AuthActions>()(
 
         // Email Verification
         pendingVerificationEmail: state.pendingVerificationEmail,
+        
+        // Registration Data (persist during flow)
+        registrationData: state.registrationData,
 
         // Passcode/Biometric
         isBiometricEnabled: state.isBiometricEnabled,

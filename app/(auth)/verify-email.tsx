@@ -42,8 +42,9 @@ export default function VerifyEmail() {
           onSuccess: (response) => {
             // Store user info and tokens from verification
             // Note: The hook already updates the auth store
-            // Route directly to home screen after email verification
-            router.replace('/(tabs)');
+            // Route to complete profile screen after email verification
+            // Navigate to Complete Profile (Personal Info step)
+            router.push('/(auth)/complete-profile/personal-info');
           },
           onError: (err: any) => {
             const errorCode = err?.error?.code;

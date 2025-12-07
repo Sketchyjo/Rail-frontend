@@ -90,25 +90,26 @@ const COUNTRY_CODES: CountryCode[] = [
 
 export function PhoneNumberInput({
   label,
-  placeholder = "Enter phone number",
+  placeholder = 'Enter phone number',
   value = '',
   onChangeText,
   onCountryChange,
   error,
   required = false,
-  defaultCountry = 'US'
+  defaultCountry = 'US',
 }: PhoneNumberInputProps) {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   // Find default country or fallback to US
   const [selectedCountry, setSelectedCountry] = useState<CountryCode>(
-    COUNTRY_CODES.find(country => country.code === defaultCountry) || COUNTRY_CODES[0]
+    COUNTRY_CODES.find((country) => country.code === defaultCountry) || COUNTRY_CODES[0]
   );
 
-  const filteredCountries = COUNTRY_CODES.filter(country =>
-    country.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    country.dialCode.includes(searchQuery)
+  const filteredCountries = COUNTRY_CODES.filter(
+    (country) =>
+      country.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      country.dialCode.includes(searchQuery)
   );
 
   const handleCountrySelect = (country: CountryCode) => {
@@ -116,7 +117,7 @@ export function PhoneNumberInput({
     setIsModalVisible(false);
     setSearchQuery('');
     onCountryChange?.(country);
-    
+
     // Update phone number with new country code if current value starts with old country code
     if (value.startsWith(selectedCountry.dialCode)) {
       const numberWithoutCode = value.substring(selectedCountry.dialCode.length);
@@ -145,16 +146,11 @@ export function PhoneNumberInput({
   const renderCountryItem = ({ item }: { item: CountryCode }) => (
     <Pressable
       onPress={() => handleCountrySelect(item)}
-      className="flex-row items-center px-4 py-3 border-b border-gray-100"
-    >
-      <Text className="text-2xl mr-3">{item.flag}</Text>
+      className="flex-row items-center border-b border-gray-100 px-4 py-3">
+      <Text className="mr-3 text-2xl">{item.flag}</Text>
       <View className="flex-1">
-        <Text className="text-base text-text-primary font-heading-regular">
-          {item.name}
-        </Text>
-        <Text className="text-sm text-text-tertiary font-heading-regular">
-          {item.dialCode}
-        </Text>
+        <Text className="font-body-bold text-base text-text-primary">{item.name}</Text>
+        <Text className="text-gray-700 font-heading-regular text-sm">{item.dialCode}</Text>
       </View>
     </Pressable>
   );
@@ -164,27 +160,23 @@ export function PhoneNumberInput({
       {/* Label */}
       {label && (
         <View className="flex-row items-center">
-          <Text className="text-sm font-heading-medium text-text-primary">
-            {label}
-          </Text>
-          {required && (
-            <Text className="text-sm text-red-500 ml-1">*</Text>
-          )}
+          <Text className="font-heading-medium text-sm text-text-primary">{label}</Text>
+          {required && <Text className="ml-1 text-sm text-red-500">*</Text>}
         </View>
       )}
 
       {/* Phone Input Container */}
-      <View className={`
-        flex-row items-center border rounded-xl bg-white
+      <View
+        className={`
+        flex-row items-center rounded-xl border bg-white
         ${error ? 'border-red-500' : 'border-gray-300'}
       `}>
         {/* Country Code Picker */}
         <Pressable
           onPress={() => setIsModalVisible(true)}
-          className="flex-row items-center px-3 py-4 border-r border-gray-300"
-        >
-          <Text className="text-lg mr-2">{selectedCountry.flag}</Text>
-          <Text className="text-base text-text-primary font-heading-regular mr-1">
+          className="flex-row items-center border-r border-gray-300 px-3 py-4">
+          <Text className="mr-2 text-lg">{selectedCountry.flag}</Text>
+          <Text className="font-heading-regular mr-1 text-base text-text-primary">
             {selectedCountry.dialCode}
           </Text>
           <Ionicons name="chevron-down" size={16} color="#A0A0A0" />
@@ -197,46 +189,33 @@ export function PhoneNumberInput({
           placeholder={placeholder}
           placeholderTextColor="#A0A0A0"
           keyboardType="phone-pad"
-          className="flex-1 px-4 py-4 text-base font-heading-regular text-text-primary"
+          className="font-heading-regular flex-1 px-4 py-4 text-base text-text-primary"
         />
       </View>
 
       {/* Error Message */}
-      {error && (
-        <Text className="text-sm text-red-500 font-heading-regular">
-          {error}
-        </Text>
-      )}
+      {error && <Text className="font-heading-regular text-sm text-red-500">{error}</Text>}
 
       {/* Country Code Modal */}
-      <Modal
-        visible={isModalVisible}
-        animationType="slide"
-        presentationStyle="pageSheet"
-      >
+      <Modal visible={isModalVisible} animationType="slide" presentationStyle="pageSheet">
         <View className="flex-1 bg-white">
           {/* Header */}
-          <View className="flex-row items-center justify-between px-4 py-4 border-b border-gray-200">
-            <Text className="text-lg font-heading-bold text-text-primary">
-              Select Country Code
-            </Text>
-            <Pressable
-              onPress={() => setIsModalVisible(false)}
-              className="p-2"
-            >
+          <View className="flex-row items-center justify-between border-b border-gray-200 px-4 py-4">
+            <Text className="font-subheading text-[24px] text-text-primary">Select Country Code</Text>
+            <Pressable onPress={() => setIsModalVisible(false)} className="p-2">
               <Ionicons name="close" size={24} color="#000000" />
             </Pressable>
           </View>
 
           {/* Search */}
-          <View className="px-4 py-3 border-b border-gray-200">
-            <View className="flex-row items-center px-4 py-3 border border-gray-300 rounded-xl bg-gray-50">
+          <View className="border-b border-gray-200 px-4 py-3">
+            <View className="flex-row items-center rounded-xl border border-gray-300 bg-gray-50 px-4 py-3">
               <Ionicons name="search" size={20} color="#A0A0A0" />
               <TextInput
                 value={searchQuery}
                 onChangeText={setSearchQuery}
                 placeholder="Search countries or codes..."
-                className="flex-1 ml-3 text-base font-heading-regular text-text-primary"
+                className="font-heading-regular ml-3 flex-1 text-base text-text-primary"
                 placeholderTextColor="#A0A0A0"
               />
             </View>

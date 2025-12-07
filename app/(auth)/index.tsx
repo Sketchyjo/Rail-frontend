@@ -19,9 +19,9 @@ const scrollViewContentStyle = { paddingBottom: 120 };
 export default function SignUp() {  
   const [formData, setFormData] = useState({
     email: '',
+    phone: '',
     password: '',
     confirmPassword: '',
-    fullName: '',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -41,14 +41,14 @@ export default function SignUp() {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.fullName.trim()) {
-      newErrors.fullName = 'Full name is required';
-    }
-
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email';
+    }
+
+    if (formData.phone && !/^\+?[1-9]\d{1,14}$/.test(formData.phone)) {
+      newErrors.phone = 'Please enter a valid phone number (E.164 format)';
     }
 
     if (!formData.password) {
@@ -74,6 +74,8 @@ export default function SignUp() {
       {
         email: formData.email,
         password: formData.password,
+        // Phone is optional and might need backend support, passing it if your backend supports it
+        // phone: formData.phone 
       },
       {
         onSuccess: (response) => {
@@ -126,28 +128,15 @@ export default function SignUp() {
             {/* Title */}
             <View className="mb-8 mt-4">
               <Text className="font-display text-[60px] text-gray-900">
-                Enter you email address
+                Create Account
               </Text>
               <Text className="mt-2 font-body-medium text-[14px] text-gray-600">
-                Join thousands of investors building their wealth
+                Sign up to start your journey
               </Text>
             </View>
 
             {/* Form */}
             <View className="gap-y-4">
-              <InputField
-                required
-                label="Full Name"
-                placeholder="Enter your full name"
-                value={formData.fullName}
-                onChangeText={(value) => updateField('fullName', value)}
-                error={errors.fullName}
-                autoCapitalize="words"
-                textContentType="name"
-                returnKeyType="next"
-                className="text-[14px]"
-              />
-
               <InputField
                 required
                 type="email"
@@ -195,8 +184,9 @@ export default function SignUp() {
               />
             </View>
 
+          <View className='mt-[240px]'>
             {/* Terms */}
-            <View className="mt-6 mb-6">
+            <View className="mb-6">
               <Text className="text-center font-label text-sm text-gray-500">
                 By creating an account, you agree to our{' '}
                 <Text className="text-gray-900 underline">Terms of Service</Text> and{' '}
@@ -207,7 +197,7 @@ export default function SignUp() {
             {/* Sign Up Button */}
             <View className="gap-y-2 pb-4">
               <Button
-                title="Create Account"
+                title="Continue"
                 onPress={handleSignUp}
                 loading={isLoading}
                 className="rounded-full font-body"
@@ -218,6 +208,7 @@ export default function SignUp() {
                 </Text>
               </TouchableOpacity>
             </View>
+          </View>
           </View>
       </ScrollView>
     </SafeAreaView>
